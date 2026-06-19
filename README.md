@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cortex
 
-## Getting Started
+A unified AI workspace with persistent memory across all major LLMs. Your prompts, skills, workflow habits, and preferences live in Cortex — and get automatically injected into every conversation, no matter which model you use.
 
-First, run the development server:
+> "Your AI memory, your rules. One login. Every model. Always in context."
+
+## What it does
+
+Most AI power users work across Claude, ChatGPT, DeepSeek, and Grok — but each one starts from scratch every session. Cortex is the memory layer that fixes that. You chat through Cortex, it injects your context as a system prompt on every request, and every AI already knows you.
+
+**Core features:**
+- Memory dashboard — create and manage prompts, skills, preferences, and workflow habits
+- Unified chat interface with model switcher (Claude, GPT-4o, DeepSeek, Grok)
+- Context compiler — assembles your active memory into a system prompt before every API call
+- Save to Memory — save any AI response back into your memory profile
+- Conversation history
+
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| UI Components | shadcn/ui |
+| State | Zustand |
+| AI SDK | ai@6 + @ai-sdk/react@3 |
+| Auth + DB | Supabase (PostgreSQL + RLS) |
+| Rate limiting | Upstash Redis |
+| Hosting | Vercel |
+
+**Supported models:** `claude-sonnet-4-5`, `gpt-4o`, `deepseek-chat`, `grok-3`
+
+## Getting started
+
+### 1. Set up Supabase
+
+- Create a project at [supabase.com](https://supabase.com)
+- Run `supabase-schema.sql` in the Supabase SQL editor
+- Enable Google OAuth in the Supabase Auth dashboard
+
+### 2. Configure environment variables
+
+Copy `.env.local.example` to `.env.local` and fill in your keys:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# LLM APIs
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+DEEPSEEK_API_KEY=
+XAI_API_KEY=
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Run locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+## How the context compiler works
 
-To learn more about Next.js, take a look at the following resources:
+Before every LLM call, `lib/context-compiler.ts` loads the user's active memory items and assembles them into a structured system prompt:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+You are a helpful AI assistant. The user has provided personal context...
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## User's Skills
+- ...
 
-## Deploy on Vercel
+## User's Preferences
+- ...
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## User's Workflow Habits
+- ...
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Custom Instructions
+- ...
+```
+
+This prompt is prepended to every API call as the system message.
+
+## Key files
+
+```
+app/api/chat/route.ts          — main LLM routing endpoint
+lib/context-compiler.ts        — assembles system prompt from user memory
+lib/model-router.ts            — routes requests to the correct LLM API
+app/(dashboard)/chat/          — chat UI
+app/(dashboard)/memory/        — memory dashboard
+app/(auth)/                    — login / signup
+supabase-schema.sql            — full database schema
+```
+
+## Deploy
+
+Push to GitHub, import in Vercel, and set all environment variables from step 2 in the Vercel dashboard.
